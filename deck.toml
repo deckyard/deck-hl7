@@ -1,0 +1,17 @@
+[package]
+name = "@deckyard/hl7"
+version = "0.1.0"
+description = "HL7 v2 messages (ER7): parse, read and build with terser paths, escapes, character sets and acknowledgements; MLLP client, listener and server"
+license = "LGPL-3.0-only"
+authors = ["mplx <mplx@jennifer-lang.dev>"]
+# MLLP runs over TCP, so the deck needs `net`. No `exec`, no `sql`.
+capabilities = ["net"]
+keywords = ["hl7", "hl7v2", "er7", "mllp", "healthcare", "adt", "oru", "interoperability"]
+
+[package.urls]
+deck = "https://raw.githubusercontent.com/deckyard/deck-hl7/main/deck.toml"
+homepage = "https://github.com/deckyard/deck-hl7"
+manual = "https://deckyard.github.io/deck-hl7/"
+
+[engines]
+jennifer = ">=0.26.0"
