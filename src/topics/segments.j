@@ -280,7 +280,7 @@ func delimitersOf(line as string) {
  *
  * @param text {string} the message
  * @return {Message} the message
- * @throws {Error} kind "hl7" when the text is empty, does not start with MSH, a segment does not end with a CR, a segment does not parse, a second MSH follows, or the text holds more than `MAX_SEGMENTS` segments or `MAX_FIELDS` fields, repetitions, components and subcomponents
+ * @throws {Error} kind "hl7" when the text is empty, does not start with MSH, a segment does not end with a CR, a segment does not parse, or a second MSH follows; kind "limit" when the text holds more than `MAX_SEGMENTS` segments or `MAX_FIELDS` fields, repetitions, components and subcomponents
  * @example
  *   def m as hl7.Message init hl7.parse($text);
  *   io.printf("%s\n", hl7.get($m, "PID-5-1"));
@@ -309,7 +309,7 @@ export func parseAll(text as string) {
         fail("the last segment does not end with a CR: " + shown($text));
     }
     if (strings.count($text, CR_TEXT) > MAX_SEGMENTS) {
-        fail(io.sprintf("more than %d segments", MAX_SEGMENTS));
+        failLimit(io.sprintf("more than %d segments", MAX_SEGMENTS));
     }
     def messages as list of Message init [];
     def current as list of Segment init [];
@@ -348,7 +348,7 @@ func countParts(count as int, line as string, d as Delimiters) {
         strings.count($line, $d.repetition) + strings.count($line, $d.component) +
         strings.count($line, $d.subcomponent) + 1;
     if ($total > MAX_FIELDS) {
-        fail(io.sprintf(
+        failLimit(io.sprintf(
             "more than %d fields, repetitions, components and subcomponents",
             MAX_FIELDS));
     }
@@ -361,14 +361,14 @@ func countParts(count as int, line as string, d as Delimiters) {
  *
  * @param m {Message} the message
  * @return {string} its segments
- * @throws {Error} kind "hl7" when the first segment is not MSH, a later one is, a segment is not valid (see `encodeSegment`), or the message holds more than `parse` reads (`MAX_SEGMENTS`, `MAX_FIELDS`)
+ * @throws {Error} kind "hl7" when the first segment is not MSH, a later one is, or a segment is not valid (see `encodeSegment`); kind "limit" when the message holds more than `parse` reads (`MAX_SEGMENTS`, `MAX_FIELDS`)
  */
 export func encode(m as Message) {
     if (len($m.segments) == 0 or segmentId($m.segments[0]) != "MSH") {
         fail("a message starts with MSH");
     }
     if (len($m.segments) > MAX_SEGMENTS) {
-        fail(io.sprintf("more than %d segments", MAX_SEGMENTS));
+        failLimit(io.sprintf("more than %d segments", MAX_SEGMENTS));
     }
     def lines as list of string init [];
     def parts as int init 0;
@@ -916,11 +916,11 @@ func formatCount(sequence as string, skip as int) {
         return 1;
     }
     if (len($digits) > 3) {
-        fail(io.sprintf("a formatting escape repeats more than %d times", MAX_FORMAT_REPEAT));
+        failLimit(io.sprintf("a formatting escape repeats more than %d times", MAX_FORMAT_REPEAT));
     }
     def count as int init convert.toInt($digits);
     if ($count > MAX_FORMAT_REPEAT) {
-        fail(io.sprintf("a formatting escape repeats more than %d times", MAX_FORMAT_REPEAT));
+        failLimit(io.sprintf("a formatting escape repeats more than %d times", MAX_FORMAT_REPEAT));
     }
     return $count;
 }
@@ -935,7 +935,7 @@ func formatCount(sequence as string, skip as int) {
  * @param s {string} the escaped text
  * @param d {Delimiters} the delimiters
  * @return {string} the value
- * @throws {Error} kind "hl7" on an unclosed or unknown sequence, and on the character-set switches `C` and `M` and the local `Z`, which have no plain-text meaning (read such a field with `raw`)
+ * @throws {Error} kind "hl7" on an unclosed or unknown sequence, and on the character-set switches `C` and `M` and the local `Z`, which have no plain-text meaning (read such a field with `raw`); kind "limit" on a formatting escape repeated more than `MAX_FORMAT_REPEAT` times
  */
 func unescaped(s as string, d as Delimiters) {
     if (not strings.contains($s, $d.escape)) {

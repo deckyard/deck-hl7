@@ -10,7 +10,9 @@ Every export of `@deckyard/hl7`. Guides are listed in
 import "@deckyard/hl7/" as hl7;
 ```
 
-Every failure is `Error{kind: "hl7"}`. An `m` argument is a `Message`, an
+Every failure is `Error{kind: "hl7"}`, except a reached cap (more segments,
+fields or formatting repeats than the limits allow), which is kind `"limit"`.
+An `m` argument is a `Message`, an
 `s` a `Segment`, a `d` `Delimiters`, a `c` a `Connection`, an `o`
 `Options`. Fields, repetitions, components and subcomponents are numbered
 from 1, as HL7 numbers them; in MSH, MSH-1 is the field separator and MSH-2

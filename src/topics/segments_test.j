@@ -57,12 +57,28 @@ func testParseRefusesWhatBreaksHl7() {
     testing.assertEqual(len(parseAll(ORU + ORU)), 2);
 }
 
+/**
+ * The message of a parse past a cap, which must be kind "limit".
+ *
+ * @param text {string} the text to parse
+ * @return {string} the message, "" when it parsed
+ */
+func capError(text as string) {
+    try {
+        parse($text);
+    } catch (e) {
+        testing.assertEqual($e.kind, "limit");
+        return $e.message;
+    }
+    return "";
+}
+
 func testParseCapsWhatItHolds() {
     testing.assertEqual(
-        parseError("MSH|^~\\&\rZZZ" + strings.repeat("|", MAX_FIELDS) + "\r"),
+        capError("MSH|^~\\&\rZZZ" + strings.repeat("|", MAX_FIELDS) + "\r"),
         "hl7: more than 65536 fields, repetitions, components and subcomponents");
     testing.assertEqual(
-        parseError(strings.repeat("\r", MAX_SEGMENTS + 1)),
+        capError(strings.repeat("\r", MAX_SEGMENTS + 1)),
         "hl7: more than 4096 segments");
 }
 
@@ -111,7 +127,7 @@ func testEscapesAreDecoded() {
     testing.assertEqual(
         unescaped("\\H\\bold\\N\\ a\\.br\\b\\.sp 2\\c\\.sk 3\\d\\.in +4\\e\\.fi\\", $d),
         "bold a\nb\n\nc   de");
-    for (def bad in ["a\\F", "\\Q\\", "\\X1\\", "\\P\\", "\\Zlocal\\", "\\C2842\\", "\\.sp 500\\"]) {
+    for (def bad in ["a\\F", "\\Q\\", "\\X1\\", "\\P\\", "\\Zlocal\\", "\\C2842\\"]) {
         try {
             unescaped($bad, $d);
             missed($bad);
@@ -226,7 +242,14 @@ func testParseRefusesInvalidEscapes() {
         unescaped("\\.sp 99999999999999999999\\", defaultDelimiters());
         missed("a huge .sp");
     } catch (e) {
-        testing.assertEqual($e.kind, "hl7");
+        testing.assertEqual($e.kind, "limit");
+    }
+    try {
+        unescaped("\\.sp 500\\", defaultDelimiters());
+        missed(".sp over the cap");
+    } catch (e) {
+        testing.assertEqual($e.kind, "limit");
+        testing.assertEqual($e.message, "hl7: a formatting escape repeats more than 100 times");
     }
 }
 
@@ -243,6 +266,7 @@ func testEncodeRefusesWhatParseWouldRefuse() {
         encode($m);
         missed("70000 fields");
     } catch (e) {
+        testing.assertEqual($e.kind, "limit");
         testing.assertContains($e.message, "more than 65536 fields");
     }
 }

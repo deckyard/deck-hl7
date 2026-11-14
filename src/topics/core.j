@@ -30,6 +30,16 @@ func fail(message as string) {
 }
 
 /**
+ * Throw a reached cap: kind "limit", the message as `fail` writes it.
+ *
+ * @param message {string} what was over the cap, without the `hl7: ` prefix
+ * @throws {Error} kind "limit", always
+ */
+func failLimit(message as string) {
+    throw Error{kind: "limit", message: "hl7: " + $message};
+}
+
+/**
  * Text quoted for an error message: at most 80 characters, control and bidi
  * characters as `?`.
  *
