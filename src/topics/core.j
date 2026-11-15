@@ -40,6 +40,39 @@ func failLimit(message as string) {
 }
 
 /**
+ * Throw a deadline that passed: kind "timeout", the message as `fail` writes
+ * it.
+ *
+ * @param message {string} what did not happen in time, without the `hl7: ` prefix
+ * @throws {Error} kind "timeout", always
+ */
+func failTimeout(message as string) {
+    throw Error{kind: "timeout", message: "hl7: " + $message};
+}
+
+/**
+ * Throw a connection the peer closed: kind "closed", the message as `fail`
+ * writes it.
+ *
+ * @param message {string} what was cut off, without the `hl7: ` prefix
+ * @throws {Error} kind "closed", always
+ */
+func failClosed(message as string) {
+    throw Error{kind: "closed", message: "hl7: " + $message};
+}
+
+/**
+ * Whether an error kind is one every library shares, which a wrapper passes
+ * on unchanged: `"net"`, `"limit"`, `"timeout"`, `"closed"`, `"cancelled"`.
+ *
+ * @param kind {string} the caught error's kind
+ * @return {bool} true for a generic kind
+ */
+func isGeneric(kind as string) {
+    return lists.contains(["net", "limit", "timeout", "closed", "cancelled"], $kind);
+}
+
+/**
  * Text quoted for an error message: at most 80 characters, control and bidi
  * characters as `?`.
  *

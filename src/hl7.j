@@ -15,8 +15,10 @@
  * escaped. Delimiters come from MSH-1 and MSH-2, the character set from
  * MSH-18. `ack` builds the acknowledgement; `send`, `receive`, `reply` and
  * `serve` move messages over MLLP. Input that breaks HL7 is an error, never
- * repaired; every failure is `Error{kind: "hl7"}`, except a reached cap, kind
- * `"limit"`. There is no validation
+ * repaired; every failure is `Error{kind: "hl7"}`, except the generic kinds:
+ * a reached cap is `"limit"`, an MLLP deadline `"timeout"`, a peer that
+ * closed `"closed"`, a network failure a `net.NetError` (`"net"`). There is
+ * no validation
  * against the per-version message structures.
  *
  * | topic | covers |
