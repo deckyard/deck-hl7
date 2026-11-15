@@ -10,8 +10,13 @@ Every export of `@deckyard/hl7`. Guides are listed in
 import "@deckyard/hl7/" as hl7;
 ```
 
-Every failure is `Error{kind: "hl7"}`, except a reached cap (more segments,
-fields or formatting repeats than the limits allow), which is kind `"limit"`.
+Every failure is `Error{kind: "hl7"}`, except the generic kinds: a reached cap
+(more segments, fields or formatting repeats than the limits allow, a received
+message over `maxBytes`) is kind `"limit"`; on an MLLP connection a message that
+does not arrive whole in time, or no acknowledgement after the retries, is kind
+`"timeout"`, a peer that closes kind `"closed"`, and a network failure (refused,
+reset, unreachable) the interpreter's `net.NetError` (kind `"net"`), passed on
+unchanged.
 An `m` argument is a `Message`, an
 `s` a `Segment`, a `d` `Delimiters`, a `c` a `Connection`, an `o`
 `Options`. Fields, repetitions, components and subcomponents are numbered

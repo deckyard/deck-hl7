@@ -26,7 +26,10 @@ import "@deckyard/hl7/" as hl7;
 Every failure is `Error{kind: "hl7"}` with a message that names what broke
 the rules, except a reached cap - more than `MAX_SEGMENTS` segments,
 `MAX_FIELDS` fields or a formatting escape repeated more than
-`MAX_FORMAT_REPEAT` times - which is kind `"limit"`. The deck is strict: input that breaks HL7's encoding is refused,
+`MAX_FORMAT_REPEAT` times, or an MLLP message over `maxBytes` - which is
+kind `"limit"`. On an MLLP connection a deadline that passed is kind
+`"timeout"`, a peer that closed kind `"closed"`, and a network failure the
+interpreter's `net.NetError` (kind `"net"`), passed on unchanged. The deck is strict: input that breaks HL7's encoding is refused,
 never repaired. Segments end with CR (an LF is a control character and an
 error), delimiters come from MSH-1 and MSH-2 and nowhere else, an unknown
 escape sequence is an error. A parsed message keeps its text, so one that

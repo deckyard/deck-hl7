@@ -7,7 +7,8 @@
 #
 # A peer is a script run in a spawned task on a raw socket: `w <text>`
 # writes the text framed (0x0B ... 0x1C 0x0D), `x <text>` writes it as is,
-# `r` reads one frame into the log, `s <ms>` sleeps, `c` closes. The log is
+# `r` reads one frame into the log, `s <ms>` sleeps, `c` closes, `a` aborts
+# (closes with a reset). The log is
 # the frames read, CRs shown as `/`, joined by `;`.
 
 /**
@@ -67,6 +68,8 @@ func play(conn as net.Conn, steps as list of string) {
             }
         } elseif ($verb == "s") {
             time.sleep(time.fromMilliseconds(convert.toInt($rest)));
+        } elseif ($verb == "a") {
+            net.abort($conn);
         } else {
             net.close($conn);
         }
@@ -117,9 +120,30 @@ func testSendSendsAgainWithoutAnAcknowledgement() {
         send($d, parse(ORU));
         missed("silence");
     } catch (e) {
+        testing.assertEqual($e.kind, "timeout");
         testing.assertEqual($e.message, "hl7: no acknowledgement within 300 ms, 1 times");
     }
     task.wait($q);
+    net.close($server);
+}
+
+# A peer that resets the connection instead of answering: the net.NetError
+# reaches the caller unchanged, with its fields.
+func testANetworkFailurePassesOnUnchanged() {
+    def server as net.Listener init net.listen("127.0.0.1:0");
+    def p as task of string init serverPeer($server, ["r", "a"]);
+    def c as Connection init connect(net.address($server), quick());
+    try {
+        send($c, parse(ORU));
+        missed("a reset");
+    } catch (e) {
+        testing.assertEqual($e.kind, "net");
+        testing.assertEqual($e.reason, "reset");
+        testing.assertEqual($e.op, "read");
+        testing.assertFalse(strings.startsWith($e.message, "hl7: "));
+    }
+    task.wait($p);
+    close($c);
     net.close($server);
 }
 
@@ -170,14 +194,15 @@ func testReceiveRefusesBrokenFraming() {
     def server as net.Listener init net.listen("127.0.0.1:0");
     def address as string init net.address($server);
     def cases as list of list of string init [
-        ["x junk", "a byte 0x6A came where a message starts"],
+        ["x junk", "a byte 0x6A came where a message starts", "hl7"],
         [
             "x " + convert.fromCodepoint(11) + "MSH|^~\\&|A\r",
-            "a message did not arrive whole within 300 ms"
+            "a message did not arrive whole within 300 ms",
+            "timeout"
         ],
-        ["c", "the connection closed"],
-        ["w MSH|^~\\&|A\nB\r", "control character"],
-        ["w " + strings.repeat("x", 2000), "a message starts with MSH"]
+        ["c", "the connection closed", "closed"],
+        ["w MSH|^~\\&|A\nB\r", "control character", "hl7"],
+        ["w " + strings.repeat("x", 2000), "a message starts with MSH", "hl7"]
     ];
     for (def k in $cases) {
         def p as task of string init spawn {
@@ -190,6 +215,7 @@ func testReceiveRefusesBrokenFraming() {
             missed($k[1]);
         } catch (e) {
             testing.assertContains($e.message, $k[1]);
+            testing.assertEqual($e.kind, $k[2]);
         }
         close($c);
         task.wait($p);
@@ -205,6 +231,7 @@ func testReceiveRefusesBrokenFraming() {
         receive($c, 1000);
         missed("too big");
     } catch (e) {
+        testing.assertEqual($e.kind, "limit");
         testing.assertEqual($e.message, "hl7: a message larger than 1024 bytes");
     }
     task.wait($p);
@@ -212,6 +239,7 @@ func testReceiveRefusesBrokenFraming() {
         send($c, parse("MSH|^~\\&|" + strings.repeat("x", 3000) + "|||||||C1\r"));
         missed("too big to send");
     } catch (e) {
+        testing.assertEqual($e.kind, "hl7");
         testing.assertEqual($e.message, "hl7: the message is larger than 1024 bytes");
     }
     close($c);
@@ -280,7 +308,9 @@ func testOptionsAndAddressesAreChecked() {
         connect("127.0.0.1:1", quick());
         missed("nobody listening");
     } catch (e) {
-        testing.assertContains($e.message, "hl7: cannot reach");
+        testing.assertEqual($e.kind, "net");
+        testing.assertEqual($e.reason, "refused");
+        testing.assertEqual($e.op, "connect");
     }
     try {
         listen("127.0.0.1:99999");
@@ -294,7 +324,7 @@ func testOptionsAndAddressesAreChecked() {
         accept($server, quick());
         missed("closed listener");
     } catch (e) {
-        testing.assertContains($e.message, "hl7: accept:");
+        testing.assertEqual($e.kind, "closed");
     }
     try {
         receive(connectionOf(net.Conn{}, quick()), 0);
@@ -325,6 +355,7 @@ func testAMessageMustArriveWholeInTime() {
         receive($c, 1000);
         missed("a trickle");
     } catch (e) {
+        testing.assertEqual($e.kind, "timeout");
         testing.assertEqual($e.message, "hl7: a message did not arrive whole within 300 ms");
     }
     testing.assertTrue(since($started) < 800);
@@ -393,7 +424,7 @@ func testServeAnswersABadHandlerAndClosesIdleConnections() {
         send($a, parse(strings.replace(ORU, "MSG00001", "MSG00003")));
         missed("an idle connection kept open");
     } catch (e) {
-        testing.assertEqual($e.kind, "hl7");
+        testing.assertEqual($e.kind, "closed");
     }
     close($a);
     net.close($server);
@@ -415,7 +446,7 @@ func testServeClosesItsConnectionsWhenStopped() {
         send($a, parse(strings.replace(ORU, "MSG00001", "MSG00004")));
         missed("a connection outliving serve");
     } catch (e) {
-        testing.assertEqual($e.kind, "hl7");
+        testing.assertEqual($e.kind, "closed");
     }
     close($a);
 }

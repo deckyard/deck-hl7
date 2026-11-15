@@ -106,7 +106,8 @@ func connectionOf(conn as net.Conn, o as Options) {
  * @param address {string} `host:port`
  * @param o {Options} the options
  * @return {Connection} the connection
- * @throws {Error} kind "hl7" when the options are invalid or the address cannot be reached within the timeout
+ * @throws {Error} kind "hl7" when the options are invalid or the address is malformed; kind "timeout" when it cannot be reached within the timeout
+ * @throws {net.NetError} kind "net" when the network fails (refused, unreachable, DNS)
  * @example
  *   def c as hl7.Connection init hl7.connect("10.0.0.30:2575", hl7.options());
  */
@@ -115,6 +116,9 @@ export func connect(address as string, o as Options) {
     try {
         return connectionOf(net.connect($address, $o.timeoutMs), $o);
     } catch (e) {
+        if (isGeneric($e.kind)) {
+            throw $e;
+        }
         fail("cannot reach " + shown($address) + ": " + $e.message);
     }
 }
@@ -125,11 +129,15 @@ export func connect(address as string, o as Options) {
  * @param address {string} `host:port`, `:2575` for every address
  * @return {net.Listener} the listener, for `accept` or `serve`; `net.close` stops it
  * @throws {Error} kind "hl7" when the address cannot be bound
+ * @throws {net.NetError} kind "net" when the network refuses it
  */
 export func listen(address as string) {
     try {
         return net.listen($address);
     } catch (e) {
+        if (isGeneric($e.kind)) {
+            throw $e;
+        }
         fail("cannot listen on " + shown($address) + ": " + $e.message);
     }
 }
@@ -140,13 +148,17 @@ export func listen(address as string) {
  * @param listener {net.Listener} from `listen`
  * @param o {Options} the options
  * @return {Connection} the connection
- * @throws {Error} kind "hl7" when the options are invalid or the listener fails or is closed
+ * @throws {Error} kind "hl7" when the options are invalid or the listener fails; kind "closed" when it is closed
+ * @throws {net.NetError} kind "net" when the network fails
  */
 export func accept(listener as net.Listener, o as Options) {
     checkOptions($o);
     try {
         return connectionOf(net.accept($listener), $o);
     } catch (e) {
+        if (isGeneric($e.kind)) {
+            throw $e;
+        }
         fail("accept: " + $e.message);
     }
 }
@@ -195,6 +207,9 @@ func write(c as Connection, data as bytes) {
         net.setWriteDeadline($c.conn, $c.options.timeoutMs);
         net.writeBytes($c.conn, $data);
     } catch (e) {
+        if (isGeneric($e.kind)) {
+            throw $e;
+        }
         fail("cannot send: " + $e.message);
     }
 }
@@ -205,7 +220,8 @@ func write(c as Connection, data as bytes) {
  * @param c {Connection} the connection
  * @param ms {int} how long to wait
  * @return {list of bytes} the bytes, or nothing when none came in time
- * @throws {Error} kind "hl7" when the connection closed or failed
+ * @throws {Error} kind "closed" when the connection closed; kind "hl7" when it failed otherwise
+ * @throws {net.NetError} kind "net" when the network fails (a reset)
  */
 func readSome(c as Connection, ms as int) {
     def out as list of bytes init [];
@@ -218,10 +234,13 @@ func readSome(c as Connection, ms as int) {
         if ($e.kind == "timeout") {
             return $out;
         }
+        if (isGeneric($e.kind)) {
+            throw $e;
+        }
         fail("the connection failed: " + $e.message);
     }
     if (len($chunk) == 0) {
-        fail("the connection closed");
+        failClosed("the connection closed");
     }
     $out[] = $chunk;
     return $out;
@@ -244,7 +263,8 @@ func since(start as time.Time) {
  * @param c {Connection} the connection
  * @param waitMs {int} how long to wait for it to begin
  * @return {list of bytes} the message's bytes, or nothing when none began in time
- * @throws {Error} kind "hl7" when bytes come before the start block, the message grows past the largest, it does not arrive whole within the timeout, or the connection closed
+ * @throws {Error} kind "hl7" when bytes come before the start block; kind "limit" when the message grows past `maxBytes`; kind "timeout" when it does not arrive whole within the timeout; kind "closed" when the connection closed
+ * @throws {net.NetError} kind "net" when the network fails (a reset, say)
  */
 func readFrame(c as Connection, waitMs as int) {
     def o as Options init $c.options;
@@ -267,7 +287,9 @@ func readFrame(c as Connection, waitMs as int) {
             if ($begun) {
                 $ms = $o.timeoutMs - since($start);
                 if ($ms <= 0) {
-                    fail(io.sprintf("a message did not arrive whole within %d ms", $o.timeoutMs));
+                    failTimeout(io.sprintf(
+                        "a message did not arrive whole within %d ms",
+                        $o.timeoutMs));
                 }
             }
             def got as list of bytes init readSome($c, $ms);
@@ -275,7 +297,7 @@ func readFrame(c as Connection, waitMs as int) {
                 if (not $begun) {
                     return $none;
                 }
-                fail(io.sprintf("a message did not arrive whole within %d ms", $o.timeoutMs));
+                failTimeout(io.sprintf("a message did not arrive whole within %d ms", $o.timeoutMs));
             }
             $chunk = $got[0];
         }
@@ -301,7 +323,7 @@ func readFrame(c as Connection, waitMs as int) {
                 $rest = binary.slice($chunk, $end + 2);
             }
             if ($total > $o.maxBytes + 1) {
-                fail(io.sprintf("a message larger than %d bytes", $o.maxBytes));
+                failLimit(io.sprintf("a message larger than %d bytes", $o.maxBytes));
             }
             if (len($rest) > 0) {
                 channel.send($c.pending, $rest);
@@ -311,7 +333,7 @@ func readFrame(c as Connection, waitMs as int) {
         }
         $total = $total + len($chunk);
         if ($total > $o.maxBytes + 3) {
-            fail(io.sprintf("a message larger than %d bytes", $o.maxBytes));
+            failLimit(io.sprintf("a message larger than %d bytes", $o.maxBytes));
         }
         $last = $chunk[len($chunk) - 1];
         $parts[] = $chunk;
@@ -331,7 +353,8 @@ func readFrame(c as Connection, waitMs as int) {
  * @param c {Connection} the connection
  * @param m {Message} the message, with a control ID in MSH-10
  * @return {Message} the acknowledgement
- * @throws {Error} kind "hl7" when the message has no control ID or does not encode, no acknowledgement comes after the retries, the reply is not an acknowledgement of this message, or the connection fails
+ * @throws {Error} kind "hl7" when the message has no control ID or does not encode, the reply is not an acknowledgement of this message, or the connection fails; kind "timeout" when no acknowledgement comes after the retries; kind "closed" when the peer closes
+ * @throws {net.NetError} kind "net" when the network fails (a reset, say)
  * @example
  *   def reply as hl7.Message init hl7.send($c, $m);
  *   if (hl7.get($reply, "MSA-1") != "AA") {
@@ -368,7 +391,7 @@ export func send(c as Connection, m as Message) {
             }
         }
         if ($attempts > $c.options.retries) {
-            fail(io.sprintf(
+            failTimeout(io.sprintf(
                 "no acknowledgement within %d ms, %d times",
                 $c.options.timeoutMs,
                 $attempts));
@@ -410,7 +433,8 @@ func acknowledgementOf(reply as Message, id as string) {
  * @param c {Connection} the connection
  * @param waitMs {int} how long to wait for one to begin: 1 to 86400000 ms
  * @return {list of Message} the message, or nothing when none began in time
- * @throws {Error} kind "hl7" when the framing is broken, the message is too large or does not arrive whole within the timeout, it does not parse, or the connection closed
+ * @throws {Error} kind "hl7" when the framing is broken or the message does not parse; kind "limit" when it is over `maxBytes`; kind "timeout" when it does not arrive whole within the timeout; kind "closed" when the connection closed
+ * @throws {net.NetError} kind "net" when the network fails (a reset, say)
  * @example
  *   for (def m in hl7.receive($c, 60000)) {
  *       hl7.reply($c, hl7.ack($m, "AA", "", "ACK1"));
@@ -432,6 +456,7 @@ export func receive(c as Connection, waitMs as int) {
  * @param c {Connection} the connection
  * @param m {Message} the reply
  * @throws {Error} kind "hl7" when it does not encode or the connection fails
+ * @throws {net.NetError} kind "net" when the network fails (a reset, say)
  */
 export func reply(c as Connection, m as Message) {
     write($c, framed($m, $c.options));

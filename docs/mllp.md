@@ -26,6 +26,12 @@ A resend can bring two acknowledgements, and one can arrive after `send`
 gave up: the next `send` on the connection skips acknowledgements of the
 message sent before it, so the connection stays in step.
 
+A network failure (nothing listening, a reset, an unreachable host) is not
+resent: it reaches the caller as the interpreter's `net.NetError`, kind
+`"net"`, with its `reason` (`refused`, `reset`, ...) and `op`. No
+acknowledgement after the retries is kind `"timeout"`, and a peer that
+closes the connection kind `"closed"`.
+
 ## Receiving
 
 `receive` returns the next message, or nothing when none began within the
@@ -40,9 +46,11 @@ for (def m in hl7.receive($c, 60000)) {
 
 Messages that arrive back to back are read one at a time. Once a
 message's first byte came, the whole message must arrive within
-`timeoutMs`, however slowly it is sent. A byte before a message's 0x0B, a
-message larger than `maxBytes`, or one that does not arrive whole in time
-is an error; close the connection after one.
+`timeoutMs`, however slowly it is sent. A byte before a message's 0x0B
+(kind `"hl7"`), a message larger than `maxBytes` (kind `"limit"`), or one
+that does not arrive whole in time (kind `"timeout"`) is an error; close
+the connection after one. A connection the peer closed is kind
+`"closed"`.
 
 ## Serving
 
