@@ -1,6 +1,6 @@
 [package]
 name = "@deckyard/hl7"
-version = "0.1.0"
+version = "0.2.0"
 description = "HL7 v2 messages (ER7): parse, read and build with terser paths, escapes, character sets and acknowledgements; MLLP client, listener and server"
 license = "LGPL-3.0-only"
 authors = ["mplx <mplx@jennifer-lang.dev>"]
