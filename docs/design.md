@@ -132,11 +132,3 @@ input) stay `"hl7"`.
   tests provoke with `net.abort` (M28.71).
 - The cost of a module struct crossing into the deck is `jennifer`'s M29.14;
   string positions on non-ASCII text are M29.13.
-
-## History
-
-- 2026-11-13: initial commit; 0.1.0 released.
-- 2026-11-14: caps raise kind `"limit"`.
-- 2026-11-15: MLLP passes network failures on as `net.NetError`; a received
-  message over `maxBytes` is `"limit"`, a deadline `"timeout"`, a closed peer
-  `"closed"` (all were `"hl7"`), for 0.2.0.
