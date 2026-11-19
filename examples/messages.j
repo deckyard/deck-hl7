@@ -20,8 +20,8 @@ import "../src/hl7.j" as hl7;
 def text as string init "MSH|^~\\&|LAB|HOSP|EHR|HOSP|20260312094500||ORU^R01^ORU_R01|MSG00001|P|2.5.1\r" +
     "PID|1||12345^^^HOSP^MR||Doe^Jane^Q||19800214|F\r" +
     "OBR|1|ORD1|FIL1|24323-8^Comprehensive metabolic panel^LN\r" +
-    "OBX|1|NM|2345-7^Glucose^LN||5.4|mmol/L|3.9-6.1|N|||F\r" +
-    "OBX|2|NM|2160-0^Creatinine^LN||133|umol/L|45-90|H|||F\r";
+    "OBX|1|NM|14749-6^Glucose^LN||5.4|mmol/L|3.9-6.1|N|||F\r" +
+    "OBX|2|NM|14682-9^Creatinine^LN||133|umol/L|45-90|H|||F\r";
 
 def m as hl7.Message init hl7.parse($text);
 io.printf("%s %s, born %s\n", hl7.get($m, "PID-5-2"), hl7.get($m, "PID-5-1"), hl7.get($m, "PID-7"));

@@ -10,7 +10,7 @@ always MSH, the message header:
 MSH|^~\&|LAB|HOSP|EHR|HOSP|20260312094500||ORU^R01^ORU_R01|MSG00001|P|2.5.1
 PID|1||12345^^^HOSP^MR~99887^^^SSA^SS||Doe^Jane^Q||19800214|F
 OBR|1|ORD1|FIL1|24323-8^Comprehensive metabolic panel^LN
-OBX|1|NM|2345-7^Glucose^LN||5.4|mmol/L|3.9-6.1|N|||F
+OBX|1|NM|14749-6^Glucose^LN||5.4|mmol/L|3.9-6.1|N|||F
 ```
 
 Fields are separated by MSH-1 (`|`), and MSH-2 names the rest: component
