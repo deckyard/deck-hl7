@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 # hl7 - segments: the ER7 encoding of HL7 v2. Delimiters from MSH-1 / MSH-2,
 # escape sequences, field / repetition / component / subcomponent access,
@@ -990,10 +990,10 @@ func decodeEscape(sequence as string, d as Delimiters) {
         return strings.join($out, "");
     }
     if (strings.startsWith($sequence, ".sp")) {
-        return strings.repeat("\n", formatCount($sequence, 3));
+        return strings.replicate("\n", formatCount($sequence, 3));
     }
     if (strings.startsWith($sequence, ".sk")) {
-        return strings.repeat(" ", formatCount($sequence, 3));
+        return strings.replicate(" ", formatCount($sequence, 3));
     }
     if (strings.startsWith($sequence, ".in") or strings.startsWith($sequence, ".ti")) {
         return "";

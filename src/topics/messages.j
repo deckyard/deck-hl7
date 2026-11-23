@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 # hl7 - messages: building a message and its MSH, acknowledgements, and the
 # character set of MSH-18 for bytes. Spliced into hl7.j via include.
@@ -201,7 +201,7 @@ export func encodeBytes(m as Message, charset as string) {
     def codec as string init codecOf(charsetName($m.segments[0]), $charset);
     try {
         if ($codec == "utf-8") {
-            return convert.bytesFromString("utf-8", $text);
+            return encoding.encode("utf-8", $text);
         }
         return encoding.encode($codec, $text);
     } catch (e) {
@@ -222,17 +222,17 @@ export func encodeBytes(m as Message, charset as string) {
  */
 export func parseBytes(b as bytes, charset as string) {
     checkCodec($charset);
-    def end as int init binary.indexOf($b, convert.bytesFromString("utf-8", CR_TEXT));
+    def end as int init binary.indexOf($b, encoding.encode("utf-8", CR_TEXT));
     if ($end < 0) {
         $end = len($b);
     }
-    def head as string init encoding.decode("iso-8859-1", binary.slice($b, 0, $end));
+    def head as string init encoding.decode("iso-8859-1", $b[..$end]);
     def msh as Segment init parseSegment($head, delimitersOf($head));
     def codec as string init codecOf(charsetName($msh), $charset);
     def text as string init "";
     try {
         if ($codec == "utf-8") {
-            $text = convert.stringFromBytes("utf-8", $b);
+            $text = encoding.decode("utf-8", $b);
         } else {
             $text = encoding.decode($codec, $b);
         }

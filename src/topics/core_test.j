@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 # hl7 - white-box tests for the core topic, and the helpers the other
 # overlays share. Spliced into hl7_test.j via include.
@@ -40,7 +40,7 @@ func parseError(text as string) {
 
 func testShownCleansAndCuts() {
     testing.assertEqual(shown("a\rb"), "\"a?b\"");
-    testing.assertEqual(len(shown(strings.repeat("x", 300))), 85);
+    testing.assertEqual(len(shown(strings.replicate("x", 300))), 85);
 }
 
 func testRanges() {

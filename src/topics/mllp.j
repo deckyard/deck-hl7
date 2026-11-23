@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 # hl7 - mllp: the Minimal Lower Layer Protocol over TCP. Each message is
 # framed as 0x0B, the message, 0x1C 0x0D. A client sends and waits for the
@@ -315,12 +315,12 @@ func readFrame(c as Connection, waitMs as int) {
         if ($split or $end >= 0) {
             def rest as bytes;
             if ($split) {
-                $rest = binary.slice($chunk, 1);
+                $rest = $chunk[1..];
                 $total = $total - 1;
             } else {
-                $parts[] = binary.slice($chunk, 0, $end);
+                $parts[] = $chunk[..$end];
                 $total = $total + $end;
-                $rest = binary.slice($chunk, $end + 2);
+                $rest = $chunk[$end + 2..];
             }
             if ($total > $o.maxBytes + 1) {
                 failLimit(io.sprintf("a message larger than %d bytes", $o.maxBytes));
@@ -329,7 +329,7 @@ func readFrame(c as Connection, waitMs as int) {
                 channel.send($c.pending, $rest);
             }
             def whole as bytes init binary.join($parts);
-            return [binary.slice($whole, 1, $total)];
+            return [$whole[1..$total]];
         }
         $total = $total + len($chunk);
         if ($total > $o.maxBytes + 3) {

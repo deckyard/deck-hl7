@@ -38,7 +38,7 @@ for (def obx in hl7.segmentsOf($m, "OBX")) {
 
 ## Requirements
 
-Jennifer 0.26.0 or newer and the default `jennifer` binary: MLLP needs
+Jennifer 0.27.0 or newer and the default `jennifer` binary: MLLP needs
 `net`, which the stock `jennifer-tiny` lacks.
 
 ## Development

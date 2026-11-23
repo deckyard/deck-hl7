@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 # hl7 - white-box tests for the mllp topic. Spliced into hl7_test.j via
 # include.
@@ -114,7 +114,7 @@ func testSendSendsAgainWithoutAnAcknowledgement() {
     def c as Connection init connect(net.address($server), $o);
     testing.assertEqual(get(send($c, parse(ORU)), "MSA-2"), "MSG00001");
     testing.assertEqual(len(strings.split(task.wait($p), ";")), 2);
-    def q as task of string init serverPeer($server, ["r", "s 800"]);
+    def q as task of string init serverPeer($server, ["r", "s 600"]);
     def d as Connection init connect(net.address($server), quick());
     try {
         send($d, parse(ORU));
@@ -193,21 +193,24 @@ func testReceiveTakesFramesOneByOne() {
 func testReceiveRefusesBrokenFraming() {
     def server as net.Listener init net.listen("127.0.0.1:0");
     def address as string init net.address($server);
+    # the peer's step, the message, the kind and how long the peer then
+    # stays: past the 300 ms timeout for the half message, briefly otherwise
     def cases as list of list of string init [
-        ["x junk", "a byte 0x6A came where a message starts", "hl7"],
+        ["x junk", "a byte 0x6A came where a message starts", "hl7", "s 50"],
         [
             "x " + convert.fromCodepoint(11) + "MSH|^~\\&|A\r",
             "a message did not arrive whole within 300 ms",
-            "timeout"
+            "timeout",
+            "s 600"
         ],
-        ["c", "the connection closed", "closed"],
-        ["w MSH|^~\\&|A\nB\r", "control character", "hl7"],
-        ["w " + strings.repeat("x", 2000), "a message starts with MSH", "hl7"]
+        ["c", "the connection closed", "closed", "s 50"],
+        ["w MSH|^~\\&|A\nB\r", "control character", "hl7", "s 50"],
+        ["w " + strings.replicate("x", 2000), "a message starts with MSH", "hl7", "s 50"]
     ];
     for (def k in $cases) {
         def p as task of string init spawn {
             def raw as net.Conn init net.connect($address, 2000);
-            return play($raw, [$k[0], "s 600"]);
+            return play($raw, [$k[0], $k[3]]);
         };
         def c as Connection init accept($server, quick());
         try {
@@ -224,7 +227,7 @@ func testReceiveRefusesBrokenFraming() {
     $big.maxBytes = 1024;
     def p as task of string init spawn {
         def raw as net.Conn init net.connect($address, 2000);
-        return play($raw, ["w MSH|^~\\&|" + strings.repeat("x", 3000) + "\r", "s 300"]);
+        return play($raw, ["w MSH|^~\\&|" + strings.replicate("x", 3000) + "\r", "s 300"]);
     };
     def c as Connection init accept($server, $big);
     try {
@@ -236,7 +239,7 @@ func testReceiveRefusesBrokenFraming() {
     }
     task.wait($p);
     try {
-        send($c, parse("MSH|^~\\&|" + strings.repeat("x", 3000) + "|||||||C1\r"));
+        send($c, parse("MSH|^~\\&|" + strings.replicate("x", 3000) + "|||||||C1\r"));
         missed("too big to send");
     } catch (e) {
         testing.assertEqual($e.kind, "hl7");

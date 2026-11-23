@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 # hl7 - white-box tests for the segments topic. Spliced into hl7_test.j via
 # include.
@@ -75,10 +75,10 @@ func capError(text as string) {
 
 func testParseCapsWhatItHolds() {
     testing.assertEqual(
-        capError("MSH|^~\\&\rZZZ" + strings.repeat("|", MAX_FIELDS) + "\r"),
+        capError("MSH|^~\\&\rZZZ" + strings.replicate("|", MAX_FIELDS) + "\r"),
         "hl7: more than 65536 fields, repetitions, components and subcomponents");
     testing.assertEqual(
-        capError(strings.repeat("\r", MAX_SEGMENTS + 1)),
+        capError(strings.replicate("\r", MAX_SEGMENTS + 1)),
         "hl7: more than 4096 segments");
 }
 
@@ -219,9 +219,9 @@ func testEncodeRefusesWhatWouldNotParseBack() {
 func testEscapesAreReadInLinearTime() {
     def d as Delimiters init defaultDelimiters();
     def started as time.Time init time.now();
-    def value as string init unescaped(strings.repeat("é\\H\\", 40000), $d);
+    def value as string init unescaped(strings.replicate("é\\H\\", 40000), $d);
     testing.assertEqual(len($value), 40000);
-    def s as Segment init setField(segment("NTE", $d), 3, strings.repeat("é^", 20000));
+    def s as Segment init setField(segment("NTE", $d), 3, strings.replicate("é^", 20000));
     testing.assertEqual(len(field($s, 3)), 40000);
     testing.assertTrue(time.milliseconds(time.sub(time.now(), $started)) < 5000);
 }

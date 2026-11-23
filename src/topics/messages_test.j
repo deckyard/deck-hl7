@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.26.0
+# pragma-jennifer-version: >=0.27.0
 
 # hl7 - white-box tests for the messages topic. Spliced into hl7_test.j via
 # include.
@@ -76,7 +76,7 @@ func testCharacterSets() {
     testing.assertEqual(encodeBytes($m, "ascii"), $latin);
     def utf as string init strings.replace($text, "8859/1", "UNICODE UTF-8");
     testing.assertEqual(
-        get(parseBytes(convert.bytesFromString("utf-8", $utf), "ascii"), "NTE-3"),
+        get(parseBytes(encoding.encode("utf-8", $utf), "ascii"), "NTE-3"),
         "Müller");
     try {
         parseBytes($latin, "ascii");
@@ -123,9 +123,7 @@ func testAckAndCharsetEdges() {
         }
     }
     try {
-        parseBytes(
-            convert.bytesFromString("utf-8", "MSH|^~\\&|A|||||||C1|P|2.5||||||8859/12\r"),
-            "ascii");
+        parseBytes(encoding.encode("utf-8", "MSH|^~\\&|A|||||||C1|P|2.5||||||8859/12\r"), "ascii");
         missed("8859/12");
     } catch (e) {
         testing.assertContains($e.message, "is not read");

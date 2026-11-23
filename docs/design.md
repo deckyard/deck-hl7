@@ -123,7 +123,8 @@ input) stay `"hl7"`.
 
 ## Dependencies on the interpreter
 
-- Floor `>=0.26.0`, the default binary and the `net` capability (not
+- Floor `>=0.27.0`, for the UTF-8 codecs of `encoding.encode` / `decode`
+  and `strings.replicate`; the default binary and the `net` capability (not
   `jennifer-tiny`).
 - Read and write deadlines on sockets, `channel`, and tasks with
   `task.poll` for `serve`.
