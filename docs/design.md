@@ -5,7 +5,7 @@
 
 ## Scope
 
-HL7 v2.x messages in ER7, the pipe-delimited encoding, and MLLP, the framing
+HL7™ v2.x messages in ER7, the pipe-delimited encoding, and MLLP, the framing
 hospital interfaces send them over. Any message type (ADT, ORU, ORM / OML,
 SIU, Z-segments) is parsed into segments, fields, repetitions, components and
 subcomponents, read and changed through terser-style paths, and encoded back.
@@ -20,7 +20,7 @@ Out of scope:
   tables are large and licence-restricted.
 - Conformance profiles, batch and file headers (FHS / BHS) and the v2 XML
   encoding.
-- FHIR, the REST standard newer systems expose, is `@deckyard/fhir`; the
+- FHIR™, the REST standard newer systems expose, is `@deckyard/fhir`; the
   lab-instrument protocol is `@deckyard/astm`, a sibling built on the same
   strict stance and field model.
 

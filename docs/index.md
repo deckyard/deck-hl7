@@ -3,7 +3,7 @@
 
 # @deckyard/hl7
 
-HL7 version 2 is how hospital systems tell each other about patients,
+HL7™ version 2 is how hospital systems tell each other about patients,
 orders, results and appointments: ADT (admissions), ORM / OML (orders),
 ORU (results), SIU (scheduling) and many more message types, each a list
 of pipe-delimited segments. This deck reads, changes and builds those
@@ -50,3 +50,11 @@ any segment, including Z-segments.
 
 The deck needs the `net` capability for MLLP and does not run on
 `jennifer-tiny`.
+
+## Trademarks
+
+HL7™ and FHIR™ are trademarks of Health Level Seven International. Other
+product and company names may be trademarks of their respective owners. They
+are used only to identify the standards this deck works with. This deck is
+an independent project, not affiliated with, sponsored or endorsed by Health
+Level Seven International.

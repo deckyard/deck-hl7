@@ -4,7 +4,7 @@
 [![Documentation](https://img.shields.io/badge/docs-github%20pages-blue)](https://deckyard.github.io/deck-hl7/)
 [![release](https://img.shields.io/github/v/release/deckyard/deck-hl7)](https://github.com/deckyard/deck-hl7/releases/latest)
 
-HL7 version 2 for [Jennifer](https://jennifer-lang.dev/) programs: parse,
+HL7™ version 2 for [Jennifer](https://jennifer-lang.dev/) programs: parse,
 read, change and build ADT, ORU, ORM, SIU and any other message in the
 pipe-delimited encoding, with terser-style paths (`PID-5-1`, `OBX(2)-5`),
 escapes, character sets from MSH-18 and acknowledgements; and send,
@@ -49,6 +49,14 @@ jennifer test src/hl7_test.j         # the tests, with a scripted MLLP peer
 tools/check-docs.sh                  # docs against the code
 tools/pack.sh dist                   # build the release archive
 ```
+
+## Trademarks
+
+HL7™ and FHIR™ are trademarks of Health Level Seven International. Other
+product and company names may be trademarks of their respective owners. They
+are used only to identify the standards this deck works with. This deck is
+an independent project, not affiliated with, sponsored or endorsed by Health
+Level Seven International.
 
 ## Licence
 

@@ -110,7 +110,7 @@ def reply as hl7.Message init hl7.ack($m, "AA", "", "ACK00001");
 Text has no character set; bytes do. `parseBytes` and `encodeBytes` use
 the one MSH-18 names (`ASCII`, `8859/1` to `8859/9`, `8859/15`, `UNICODE
 UTF-8`), or
-the `charset` given when MSH-18 is empty (HL7's default is ASCII). Other
+the `charset` given when MSH-18 is empty (HL7™'s default is ASCII). Other
 character sets are refused.
 
 ## Limits
