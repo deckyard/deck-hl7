@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.27.0
+# pragma-jennifer-version: >=0.28.0
 
 # hl7 - mllp: the Minimal Lower Layer Protocol over TCP. Each message is
 # framed as 0x0B, the message, 0x1C 0x0D. A client sends and waits for the
@@ -114,7 +114,9 @@ func connectionOf(conn as net.Conn, o as Options) {
 export func connect(address as string, o as Options) {
     checkOptions($o);
     try {
-        return connectionOf(net.connect($address, $o.timeoutMs), $o);
+        return connectionOf(
+            net.connectWith($address, net.ConnectOptions{timeoutMs: $o.timeoutMs}),
+            $o);
     } catch (e) {
         if (isGeneric($e.kind)) {
             throw $e;

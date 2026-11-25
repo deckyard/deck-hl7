@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.27.0
+# pragma-jennifer-version: >=0.28.0
 
 # hl7 - paths: terser-style paths (`PID-5-1`, `OBX(2)-5`, `PID-3(2)-1`) to
 # read and set values, and finding segments by ID. Spliced into hl7.j via

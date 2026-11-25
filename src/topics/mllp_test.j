@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2026 mplx <mplx@jennifer-lang.dev>
-# pragma-jennifer-version: >=0.27.0
+# pragma-jennifer-version: >=0.28.0
 
 # hl7 - white-box tests for the mllp topic. Spliced into hl7_test.j via
 # include.
@@ -174,7 +174,7 @@ func testReceiveTakesFramesOneByOne() {
     def server as net.Listener init net.listen("127.0.0.1:0");
     def address as string init net.address($server);
     def p as task of string init spawn {
-        def raw as net.Conn init net.connect($address, 2000);
+        def raw as net.Conn init net.connectWith($address, net.ConnectOptions{timeoutMs: 2000});
         net.writeBytes($raw, binary.concat(frameText(ORU), frameText(ORU_ACK)));
         return play($raw, ["r", "s 500"]);
     };
@@ -209,7 +209,7 @@ func testReceiveRefusesBrokenFraming() {
     ];
     for (def k in $cases) {
         def p as task of string init spawn {
-            def raw as net.Conn init net.connect($address, 2000);
+            def raw as net.Conn init net.connectWith($address, net.ConnectOptions{timeoutMs: 2000});
             return play($raw, [$k[0], $k[3]]);
         };
         def c as Connection init accept($server, quick());
@@ -226,7 +226,7 @@ func testReceiveRefusesBrokenFraming() {
     def big as Options init quick();
     $big.maxBytes = 1024;
     def p as task of string init spawn {
-        def raw as net.Conn init net.connect($address, 2000);
+        def raw as net.Conn init net.connectWith($address, net.ConnectOptions{timeoutMs: 2000});
         return play($raw, ["w MSH|^~\\&|" + strings.replicate("x", 3000) + "\r", "s 300"]);
     };
     def c as Connection init accept($server, $big);
@@ -347,7 +347,7 @@ func testAMessageMustArriveWholeInTime() {
     }
     def p as task of string init spawn {
         try {
-            return play(net.connect($address, 2000), $steps);
+            return play(net.connectWith($address, net.ConnectOptions{timeoutMs: 2000}), $steps);
         } catch (e) {
             return "closed";
         }
@@ -374,7 +374,7 @@ func testAFrameSplitAnywhereIsRead() {
     def cut as int init len($whole) - 1;
     def p as task of string init spawn {
         return play(
-            net.connect($address, 2000),
+            net.connectWith($address, net.ConnectOptions{timeoutMs: 2000}),
             ["x " + $whole[..$cut], "s 100", "x " + $whole[$cut..], "s 300"]);
     };
     def c as Connection init accept($server, quick());

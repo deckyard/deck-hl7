@@ -1,6 +1,6 @@
 [package]
 name = "@deckyard/hl7"
-version = "0.2.0"
+version = "0.3.0"
 description = "HL7 v2 messages (ER7): parse, read and build with terser paths, escapes, character sets and acknowledgements; MLLP client, listener and server"
 license = "LGPL-3.0-only"
 authors = ["mplx <mplx@jennifer-lang.dev>"]
@@ -14,4 +14,4 @@ homepage = "https://github.com/deckyard/deck-hl7"
 manual = "https://deckyard.github.io/deck-hl7/"
 
 [engines]
-jennifer = ">=0.27.0"
+jennifer = ">=0.28.0"
