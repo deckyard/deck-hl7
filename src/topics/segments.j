@@ -7,11 +7,14 @@
 # building segments, parsing and encoding messages. Spliced into hl7.j via
 # include.
 
-/** The most segments `parse` reads in one call: 4096. */
-export def const MAX_SEGMENTS as int init 4096;
+/** The most segments `parse` reads in one call: 16384. */
+export def const MAX_SEGMENTS as int init 16384;
 
-/** The most fields, repetitions, components and subcomponents `parse` reads in one call: 65536. */
-export def const MAX_FIELDS as int init 65536;
+/**
+ * The most fields, repetitions, components and subcomponents `parse` reads in one
+ * call: 262144.
+ */
+export def const MAX_FIELDS as int init 262144;
 
 # the most lines or spaces one formatting escape (`\.sp n\`, `\.sk n\`) gives
 def const MAX_FORMAT_REPEAT as int init 100;

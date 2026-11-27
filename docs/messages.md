@@ -115,9 +115,9 @@ character sets are refused.
 
 ## Limits
 
-`parse` reads at most `MAX_SEGMENTS` (4096) segments and `MAX_FIELDS`
-(65536) fields, repetitions, components and subcomponents in one call, and
+`parse` reads at most `MAX_SEGMENTS` (16384) segments and `MAX_FIELDS`
+(262144) fields, repetitions, components and subcomponents in one call, and
 `encode` refuses a message beyond them, so what it writes parses back. The
 caps bound the parts of a message, not its length: the length is bounded by
-MLLP's `maxBytes` (1 MiB by default, about 130 MB to hold at worst), or by
+MLLP's `maxBytes` (1 MiB by default, about 100 MB to hold at worst), or by
 the caller for text from elsewhere.

@@ -27,8 +27,8 @@ the encoding characters.
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `MAX_SEGMENTS` | `4096` | the most segments `parse` reads in one call |
-| `MAX_FIELDS` | `65536` | the most fields, repetitions, components and subcomponents `parse` reads in one call |
+| `MAX_SEGMENTS` | `16384` | the most segments `parse` reads in one call |
+| `MAX_FIELDS` | `262144` | the most fields, repetitions, components and subcomponents `parse` reads in one call |
 | `DEFAULT_TIMEOUT_MS` | `30000` | how long MLLP waits for an acknowledgement, or for a whole message once it began |
 | `DEFAULT_MAX_BYTES` | `1048576` | the largest MLLP message |
 

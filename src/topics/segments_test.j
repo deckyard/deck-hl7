@@ -76,10 +76,10 @@ func capError(text as string) {
 func testParseCapsWhatItHolds() {
     testing.assertEqual(
         capError("MSH|^~\\&\rZZZ" + strings.replicate("|", MAX_FIELDS) + "\r"),
-        "hl7: more than 65536 fields, repetitions, components and subcomponents");
+        "hl7: more than 262144 fields, repetitions, components and subcomponents");
     testing.assertEqual(
         capError(strings.replicate("\r", MAX_SEGMENTS + 1)),
-        "hl7: more than 4096 segments");
+        "hl7: more than 16384 segments");
 }
 
 func testFieldAccess() {
@@ -261,12 +261,12 @@ func testComponentOfEachReadsTheFieldOnce() {
 }
 
 func testEncodeRefusesWhatParseWouldRefuse() {
-    def m as Message init set(parse(ORU), "PID-70000", "x");
+    def m as Message init set(parse(ORU), "PID-270000", "x");
     try {
         encode($m);
-        missed("70000 fields");
+        missed("270000 fields");
     } catch (e) {
         testing.assertEqual($e.kind, "limit");
-        testing.assertContains($e.message, "more than 65536 fields");
+        testing.assertContains($e.message, "more than 262144 fields");
     }
 }

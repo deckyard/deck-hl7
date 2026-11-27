@@ -89,8 +89,10 @@ input) stay `"hl7"`.
 
 ## Security and limits
 
-- `MAX_SEGMENTS` (4096) and `MAX_FIELDS` (65536) bound the parts of a
-  message; at the caps the worst case holds about 127 MB. `encode` refuses a
+- `MAX_SEGMENTS` (16384) and `MAX_FIELDS` (262144) bound the parts of a
+  message; at the caps the worst case holds about 100 MB and takes about
+  2 s (262,000 repetitions read with `values`). A full 1 MiB MLLP message of results (about 13,000 OBX segments)
+  fits. `encode` refuses a
   message past them, so what it writes parses back.
 - The length is bounded by MLLP's `maxBytes` (`DEFAULT_MAX_BYTES`, 1 MiB),
   both ways; it stays that high because base64 PDFs travel in one OBX-5
@@ -117,9 +119,10 @@ input) stay `"hl7"`.
 ## Known limitations and open questions
 
 - A call into the deck rebuilds the `Message` it is given (the interpreter's
-  rule for a module's own structs): about 12 MB per `get` on a
-  2000-segment message. `get` and `set` avoid a second copy; on large
-  messages walk `segmentsOf` instead of calling `get` per field.
+  rule for a module's own structs). On Jennifer 0.28.0 most of that cost is
+  gone: `get` on a 2000-segment message takes 1.5 to 3 ms a call. `get` and
+  `set` avoid a second copy; on large messages walk `segmentsOf` instead of
+  calling `get` per field.
 
 ## Dependencies on the interpreter
 
